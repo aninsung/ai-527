@@ -2,7 +2,6 @@
 ## 2024~2025 winter season task: image captioning(이미지를 text로 생성) 구현
 ### model: biobert(text) +resnet(image)
 
-아래는 깃허브 저장소의 `README.md` 파일로 바로 사용하실 수 있도록 전체 마크다운 코드로 감싼 형태입니다. 오른쪽 상단의 **'복사(Copy)'** 버튼을 누르거나 블록을 지정해 그대로 복사하셔서 사용하시면 됩니다.
 
 ```markdown
 # 🩺 Biomedical Image Captioning with ResNet & BioBERT
