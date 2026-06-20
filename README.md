@@ -1,20 +1,25 @@
-# Chest X-ray Image Captioning using ResNet50 and BioBERT
+# Chest X-ray Image Captioning with ResNet50, Ramen, and BioBERT
 
 ## Project Overview
 
-본 프로젝트는 Chest X-ray 영상을 입력받아 자동으로 의료 소견(Medical Findings)을 생성하는 의료 영상 캡셔닝(Image Captioning) 시스템을 구현하는 것을 목표로 한다.
+본 프로젝트는 Chest X-ray 영상을 입력받아 의료 소견(Medical Findings)을 자동 생성하고, 생성된 보고서를 분석하여 질병 정보를 추출하는 의료 영상 캡셔닝 시스템이다.
 
-이미지 특징 추출을 위해 ResNet50을 사용하고, 생성된 의료 보고서를 BioBERT를 이용하여 분석함으로써 질병 정보를 추출하고 의료 영상 해석을 지원한다.
+특히 최근 제안된 Ramen(Robust Test-Time Adaptation with Active Sample Selection)을 적용하여 병원별 장비 차이, 촬영 환경 차이, 데이터 분포 변화(Domain Shift)에 강인한 의료 영상 분석 모델을 구축하는 것을 목표로 한다.
 
 ---
 
 ## Motivation
 
-흉부 X-ray는 폐렴(Pneumonia), 심장비대(Cardiomegaly), 흉막삼출(Pleural Effusion) 등 다양한 질환 진단에 사용되는 대표적인 의료 영상이다.
+의료 영상 데이터는 병원마다 다음과 같은 차이를 가진다.
 
-그러나 의료 영상 판독에는 전문 의료진의 많은 시간과 노력이 필요하며, 대량의 의료 데이터를 효율적으로 처리하기 위한 자동화 기술이 요구되고 있다.
+- 촬영 장비 차이
+- 영상 해상도 차이
+- 환자 분포 차이
+- 노이즈 및 영상 품질 차이
 
-본 프로젝트는 Deep Learning과 Natural Language Processing 기술을 결합하여 의료 영상으로부터 자동으로 설명 문장을 생성하고, 생성된 보고서를 기반으로 질병 정보를 추출하는 시스템을 구축한다.
+이러한 Domain Shift는 모델 성능 저하를 유발한다.
+
+본 프로젝트는 Ramen 기반 Test-Time Adaptation을 통해 새로운 환경에서도 안정적인 성능을 유지할 수 있는 Chest X-ray Captioning 시스템을 개발한다.
 
 ---
 
@@ -24,8 +29,12 @@
 Chest X-ray Image
         │
         ▼
-    ResNet50
+     ResNet50
 (Image Feature Extraction)
+        │
+        ▼
+      Ramen
+(Test-Time Adaptation)
         │
         ▼
  Transformer Decoder
@@ -35,35 +44,54 @@ Chest X-ray Image
  Generated Findings
         │
         ▼
-      BioBERT
+     BioBERT
 (Medical Text Analysis)
         │
         ▼
- Disease Information
+ Disease Prediction
 ```
 
 ---
 
 ## Model Components
 
-### 1. Image Encoder
+### 1. ResNet50 Encoder
 
-- ResNet50
-- Chest X-ray 이미지 특징 추출
-- CNN 기반 Feature Map 생성
+- Chest X-ray 특징 추출
+- CNN 기반 Feature Representation 생성
 
-### 2. Report Generator
+### 2. Ramen (Test-Time Adaptation)
 
-- Transformer Decoder
-- 의료 보고서 자동 생성
-- Findings 및 Impression 생성
+- Active Sample Selection
+- Domain Consistency 유지
+- Prediction Balance 적용
+- Mixed-Domain 환경 적응
+- Test 단계에서 모델 자동 적응
 
-### 3. Medical NLP
+주요 역할
 
-- BioBERT
-- 생성된 보고서 분석
-- 질병명(Entity) 추출
-- 의료 개체 인식(NER)
+- 병원 간 데이터 분포 차이 완화
+- 새로운 환경에서 성능 유지
+- 강건한 Feature Representation 생성
+
+### 3. Transformer Decoder
+
+- 의료 보고서 생성
+- Findings 생성
+- Impression 생성
+
+예시
+
+```text
+Mild cardiomegaly is noted.
+No pleural effusion is observed.
+```
+
+### 4. BioBERT
+
+- 생성된 의료 보고서 분석
+- 질병 개체 추출
+- Medical NLP 수행
 
 ---
 
@@ -71,15 +99,14 @@ Chest X-ray Image
 
 ### MIMIC-CXR
 
-- 377,110 Chest X-ray Images
-- 227,835 Radiology Reports
-- 실제 임상 환경의 판독 보고서 제공
+- 377,110 Images
+- 227,835 Studies
+- 실제 임상 판독 보고서 제공
 
 ### IU X-Ray Dataset
 
 - 7,470 Images
 - 3,955 Reports
-- 의료 영상 캡셔닝 연구에 널리 사용
 
 ---
 
@@ -88,66 +115,110 @@ Chest X-ray Image
 - Python
 - PyTorch
 - ResNet50
-- Transformer
+- Transformer Decoder
 - BioBERT
+- Ramen
 - NumPy
 - Pandas
 - Matplotlib
 
 ---
 
-## Training Process
+## Training Pipeline
 
-1. Chest X-ray 이미지 입력
-2. ResNet50을 이용한 Feature Extraction
-3. Transformer Decoder를 통한 Report Generation
-4. Generated Report 생성
-5. BioBERT를 이용한 Medical Text Analysis
-6. 질병 정보 추출 및 결과 출력
+### Stage 1
+
+Chest X-ray Image Encoder 학습
+
+```text
+Image
+↓
+ResNet50
+↓
+Feature Vector
+```
+
+### Stage 2
+
+Medical Report Generation 학습
+
+```text
+Feature Vector
+↓
+Transformer Decoder
+↓
+Report
+```
+
+### Stage 3
+
+BioBERT 기반 의료 텍스트 분석
+
+```text
+Report
+↓
+BioBERT
+↓
+Disease Extraction
+```
+
+### Stage 4
+
+Test-Time Adaptation
+
+```text
+New Hospital Data
+↓
+Ramen
+↓
+Model Adaptation
+↓
+Robust Caption Generation
+```
 
 ---
 
 ## Evaluation Metrics
 
-### Image Captioning
+### Captioning
 
-- BLEU
-- ROUGE-L
+- BLEU-1
+- BLEU-2
+- BLEU-3
+- BLEU-4
 - METEOR
+- ROUGE-L
 - CIDEr
 
-### Medical Report Evaluation
+### Clinical Evaluation
 
-- Clinical Accuracy
-- Disease Detection Accuracy
 - Precision
 - Recall
-- F1-Score
+- F1-score
+- Disease Detection Accuracy
+
+### Robustness Evaluation
+
+- Domain Shift Accuracy
+- Mixed-Domain Accuracy
+- Adaptation Gain
 
 ---
 
-## Expected Results
+## Expected Outcomes
 
-- Chest X-ray 기반 자동 의료 보고서 생성
-- 의료진의 판독 업무 보조
-- 의료 영상 분석 자동화
-- 질병 정보 추출 및 임상 의사결정 지원
-
----
-
-## Future Work
-
-- Vision Transformer(ViT) 적용
-- Attention Visualization
-- BioGPT 및 ClinicalBERT 비교 실험
-- Explainable AI(XAI) 기반 해석 가능성 향상
-- Multi-modal Medical Foundation Model 연구
+- 자동 의료 보고서 생성
+- 질병 정보 자동 추출
+- 병원 간 Domain Shift 대응
+- 강건한 의료 영상 분석 시스템 구축
+- 의료진 의사결정 지원
 
 ---
 
 ## References
 
 - ResNet: Deep Residual Learning for Image Recognition
-- BioBERT: A Pre-trained Biomedical Language Representation Model
+- BioBERT: Biomedical Language Representation Model
+- Ramen: Robust Test-Time Adaptation of Vision-Language Models with Active Sample Selection
 - MIMIC-CXR Dataset
 - IU X-Ray Dataset
